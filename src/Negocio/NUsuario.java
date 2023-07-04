@@ -8,6 +8,7 @@ import Datos.Respuesta;
 import Datos.Usuario;
 import Datos.DUsuario;
 import java.util.ArrayList;
+import java.util.Map;
 
 /**
  *
@@ -22,77 +23,82 @@ public class NUsuario {
     }
 
     //LISTARUSU[EMAIL, CI, FULLNAME]
-    public String listarusu(String params) {
+    public ArrayList<Usuario> listusu(Map<String, Object> lineaComand) {
         String msg = "Content-Type:text/html;\r\n<html>"
-                + "<body>\n";
+        + "<body>\n";
+        DUsuario DU = new DUsuario();
+        return DU.listarTodos();
+        
+        
+        /*
         String[] values = params.split(",");
         if (values.length == 3) {
-            String emailParam = values[0].trim();
-            String ciParam = values[1].trim();
-            String fullnameParam = values[2].trim();
-            String msgErr = "";
-            boolean ok = true;
-            if (emailParam.length() <= 0 || emailParam.length() > 320) {
-                ok = false;
-                msgErr = "Email invalido";
-            }
-            if (ciParam.length() <= 0 || ciParam.length() > 10) {
-                ok = false;
-                msgErr = "CI invalido";
-            }
-            if (fullnameParam.length() <= 0 || fullnameParam.length() > 100) {
-                ok = false;
-                msgErr = "Nombre completo invalido";
-            }
-            if (ok == true) {
-                DUsuario duObj = new DUsuario();
-                ArrayList<Usuario> usrsResult = duObj.listarusu(emailParam, ciParam, fullnameParam);
-                if (!usrsResult.isEmpty()) {
-                    String res = "<h2> Lista de Usuarios </h2>\n"
-                            + "<table border=1>\n"
-                            + "<tr>"
-                            + "<td style=\"font-size: 16px; font-weight: 800; padding: 10px;\">ID</td>"
-                            + "<td style=\"font-size: 16px; font-weight: 800; padding: 10px;\">ROL</td>"
-                            + "<td style=\"font-size: 16px; font-weight: 800; padding: 10px;\">EMAIL</td>"
-                            + "<td style=\"font-size: 16px; font-weight: 800; padding: 10px;\">CI</td>"
-                            + "<td style=\"font-size: 16px; font-weight: 800; padding: 10px;\">NOMBRE COMP</td>"
-                            + "</tr>\n";
-                    for (Usuario usr : usrsResult) {
-                        res += usr.toLISTARUSUtable();
-                    }
-                    res += "</table>";
-                    msg += "  <h2> COMANDO: LISTARUSU[EMAIL, CI, FULLNAME] </h2>\n"
-                            + res;
-                } else {
-                    msg += "  <h2> COMANDO: LISTARUSU[EMAIL, CI, FULLNAME] </h2>\n"
-                            + "  <h4>No se encontro registros con los parametros proporcionados</h4>\n";
-                }
-            } else {
-                msg += "  <h1> EXCEPCION AL SELECCIONAR USUARIOS </h1>\n"
-                        + "  <h3>EXCEPCION: " + msgErr + "</h3>\n"
-                        + "  <h2> COMANDO: LISTARUSU[EMAIL, CI, FULLNAME] </h2>\n"
-                        + "  <p>Si desea obviar alguno introduzca '0' </p>\n"
-                        + "  <h3>Ejemplos</h3>\n"
-                        + "  <ul>\n"
-                        + "      <li>LISTARUSU[0, 0, 0] retorna todos los usuarios</li>\n"
-                        + "      <li>LISTARUSU[0, 0, juan] retorna usuarios con nombre 'juan'</li>\n"
-                        + "      <li>LISTARUSU[@outlook, 0, pedro] retorna usuarios con correo '@outlook' y nombre 'pedro'</li>\n"
-                        + "  </ul>\n";
-            }
+        String emailParam = values[0].trim();
+        String ciParam = values[1].trim();
+        String fullnameParam = values[2].trim();
+        String msgErr = "";
+        boolean ok = true;
+        if (emailParam.length() <= 0 || emailParam.length() > 320) {
+        ok = false;
+        msgErr = "Email invalido";
+        }
+        if (ciParam.length() <= 0 || ciParam.length() > 10) {
+        ok = false;
+        msgErr = "CI invalido";
+        }
+        if (fullnameParam.length() <= 0 || fullnameParam.length() > 100) {
+        ok = false;
+        msgErr = "Nombre completo invalido";
+        }
+        if (ok == true) {
+        DUsuario duObj = new DUsuario();
+        ArrayList<Usuario> usrsResult = duObj.listarusu(emailParam, ciParam, fullnameParam);
+        if (!usrsResult.isEmpty()) {
+        String res = "<h2> Lista de Usuarios </h2>\n"
+        + "<table border=1>\n"
+        + "<tr>"
+        + "<td style=\"font-size: 16px; font-weight: 800; padding: 10px;\">ID</td>"
+        + "<td style=\"font-size: 16px; font-weight: 800; padding: 10px;\">ROL</td>"
+        + "<td style=\"font-size: 16px; font-weight: 800; padding: 10px;\">EMAIL</td>"
+        + "<td style=\"font-size: 16px; font-weight: 800; padding: 10px;\">CI</td>"
+        + "<td style=\"font-size: 16px; font-weight: 800; padding: 10px;\">NOMBRE COMP</td>"
+        + "</tr>\n";
+        for (Usuario usr : usrsResult) {
+        res += usr.toLISTARUSUtable();
+        }
+        res += "</table>";
+        msg += "  <h2> COMANDO: LISTARUSU[EMAIL, CI, FULLNAME] </h2>\n"
+        + res;
         } else {
-            msg += "  <h1> EXCEPCION AL SELECCIONAR USUARIOS </h1>\n"
-                    + "  <h2> COMANDO: LISTARUSU[EMAIL, CI, FULLNAME] </h2>\n"
-                    + "  <p> Error en parametros, debe llenar todos los parametros, si desea obviar alguno introduzca '0' </p>\n"
-                    + "  <h3>Ejemplos</h3>\n"
-                    + "  <ul>\n"
-                    + "      <li>LISTARUSU[0, 0, 0] retorna todos los usuarios</li>\n"
-                    + "      <li>LISTARUSU[0, 0, juan] retorna usuarios con nombre 'juan'</li>\n"
-                    + "      <li>LISTARUSU[@outlook, 0, pedro] retorna usuarios con correo '@outlook' y nombre 'pedro'</li>\n"
-                    + "  </ul>\n";
+        msg += "  <h2> COMANDO: LISTARUSU[EMAIL, CI, FULLNAME] </h2>\n"
+        + "  <h4>No se encontro registros con los parametros proporcionados</h4>\n";
+        }
+        } else {
+        msg += "  <h1> EXCEPCION AL SELECCIONAR USUARIOS </h1>\n"
+        + "  <h3>EXCEPCION: " + msgErr + "</h3>\n"
+        + "  <h2> COMANDO: LISTARUSU[EMAIL, CI, FULLNAME] </h2>\n"
+        + "  <p>Si desea obviar alguno introduzca '0' </p>\n"
+        + "  <h3>Ejemplos</h3>\n"
+        + "  <ul>\n"
+        + "      <li>LISTARUSU[0, 0, 0] retorna todos los usuarios</li>\n"
+        + "      <li>LISTARUSU[0, 0, juan] retorna usuarios con nombre 'juan'</li>\n"
+        + "      <li>LISTARUSU[@outlook, 0, pedro] retorna usuarios con correo '@outlook' y nombre 'pedro'</li>\n"
+        + "  </ul>\n";
+        }
+        } else {
+        msg += "  <h1> EXCEPCION AL SELECCIONAR USUARIOS </h1>\n"
+        + "  <h2> COMANDO: LISTARUSU[EMAIL, CI, FULLNAME] </h2>\n"
+        + "  <p> Error en parametros, debe llenar todos los parametros, si desea obviar alguno introduzca '0' </p>\n"
+        + "  <h3>Ejemplos</h3>\n"
+        + "  <ul>\n"
+        + "      <li>LISTARUSU[0, 0, 0] retorna todos los usuarios</li>\n"
+        + "      <li>LISTARUSU[0, 0, juan] retorna usuarios con nombre 'juan'</li>\n"
+        + "      <li>LISTARUSU[@outlook, 0, pedro] retorna usuarios con correo '@outlook' y nombre 'pedro'</li>\n"
+        + "  </ul>\n";
         }
         msg += "</body>"
-                + "</html>";
-        return msg;
+        + "</html>";*/
+//        return msg;
     }
 
     //REGUSU[ROL,EMAIL,PASSWORD,CI,FULLNAME]

@@ -10,34 +10,41 @@ package Datos;
  */
 public class Usuario {
 
-    public int usu_id = 0;
-    public int usu_rol = 0;
+    public long id = 0;
     public String fullname = "";
     public String ci = "";
     public String estado= "";
-    public String pass = "";
     public String email = "";
+    public String pass = "";
+    public int rol = 0;
     
     
     public Usuario(){};
     
-    public Usuario(int id, int rol, String email, String pass, String ci, String fullname) {
-        this.usu_id = id;
-        this.usu_rol = rol;
-        this.email = email;
-        this.pass = pass;
+    public Usuario(long id, String ci, String fullname, String email, String estado) {
+        this.id = id;
         this.ci = ci;
         this.fullname = fullname;
+        this.email = email;
+        this.estado = estado;
     }
     
     public String toLISTARUSUtable(){
         return "<tr>" + 
-                "<td>" + this.usu_id + "</td>" +
-                "<td>" + this.usu_rol + "</td>" + 
+                "<td>" + this.id + "</td>" +
+                "<td>" + this.rol + "</td>" + 
                 "<td>" + this.email + "</td>" +
                 "<td>" + this.ci + "</td>" +
                 "<td>" + this.fullname + "</td>" +
                 "</tr>\n";
     }
+
+    @Override
+    public String toString() {
+        //return "Usuario{" + "id=" + id + ", fullname=" + fullname + ", ci=" + ci + ", estado=" + estado + ", email=" + email + ", pass=" + pass + ", rol=" + rol + '}';
+        return "[" + id + ", " + fullname + ", " + ci + ", " + estado + ", " + email + ", " + pass + ", " + rol + ']';
+    }
+    
+    
 
 }

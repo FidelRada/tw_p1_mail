@@ -8,7 +8,6 @@ package Datos;
  *
  * @author fidel
  */
-
 import Conexion.DbConn;
 import java.util.ArrayList;
 import java.sql.PreparedStatement;
@@ -26,18 +25,22 @@ public class DUsuario {
 
     public ArrayList<Usuario> listarTodos() {
         ArrayList<Usuario> lista = new ArrayList<>();
-        String sql = "SELECT * FROM Usuario WHERE usu_estado = 1";
+        String sql = "SELECT id, ci, fullname, email, estado FROM Users;";
         try {
             PreparedStatement stmnt = con.conectar().prepareStatement(sql);
             ResultSet result = stmnt.executeQuery();
             con.desconectar();
             while (result.next()) {
-                lista.add(new Usuario(result.getInt(1),
-                        result.getInt(2),
+                /*for (int i = 1; i <= result.getMetaData().getColumnCount(); i++) {
+                System.out.println(result.getObject(i) + "=>\t" + result.getObject(i).getClass().getName());
+                }*/
+
+                lista.add(new Usuario(
+                        result.getLong(1),
+                        result.getString(2),
                         result.getString(3),
                         result.getString(4),
-                        result.getString(5),
-                        result.getString(6)));
+                        result.getString(5)));
             }
         } catch (Exception e) {
             System.out.println("Excepcion al listarTodos DUsuario: " + e.getMessage());
@@ -72,15 +75,9 @@ public class DUsuario {
             ResultSet result = stmnt.executeQuery();
             con.desconectar();
             while (result.next()) {
-                System.out.println(
-                    result.getInt(1) + " \n" +
-                    result.getString(2) + " \n" +
-                    result.getString(3) + " \n" +
-                    result.getString(4) + " \n" +
-                    result.getString(5) + " \n" +
-                    result.getString(6) + " \n" );
-                u.usu_id = result.getInt(1);
-                u.usu_rol = 1;
+
+                u.id = result.getInt(1);
+                u.rol = 1;
                 u.email = result.getString(3);
                 u.pass = result.getString(4);
                 u.ci = result.getString(5);
@@ -133,12 +130,12 @@ public class DUsuario {
             ResultSet result = stmnt.executeQuery();
             con.desconectar();
             while (result.next()) {
-                lista.add(new Usuario(result.getInt(1),
-                        result.getInt(2),
-                        result.getString(3),
-                        result.getString(4),
-                        result.getString(5),
-                        result.getString(6)));
+                /*lista.add(new Usuario(result.getInt(1),
+                result.getInt(2),
+                result.getString(3),
+                result.getString(4),
+                result.getString(5),
+                result.getString(6)));*/
             }
         } catch (Exception e) {
             System.out.println("Excepcion en listarusu DUsuario: " + e.getMessage());
@@ -242,7 +239,7 @@ public class DUsuario {
         if (chgEmail == true || chgci == true) {
             ArrayList<Usuario> existentUsers = listarTodos();
             for (Usuario usr : existentUsers) {
-                if ((usr.ci.equals(ciParam) || usr.email.equals(emailParam)) && (usr.usu_id != Integer.valueOf(idParam))) {
+                if ((usr.ci.equals(ciParam) || usr.email.equals(emailParam)) && (usr.id != Integer.valueOf(idParam))) {
                     nuevoUsr = false;
                     break;
                 }
@@ -301,7 +298,7 @@ public class DUsuario {
         boolean usrValido = false;
         ArrayList<Usuario> users = listarTodos();
         for (Usuario usr : users) {
-            if (usr.usu_id == Integer.valueOf(id)) {
+            if (usr.id == Integer.valueOf(id)) {
                 usrValido = true;
                 break;
             }
@@ -320,6 +317,12 @@ public class DUsuario {
             System.out.println("Excepcion al elimusu DUsuario: " + e);
         }
         return new Respuesta("Excepcion algo salio mal", false);
+    }
+
+    public static void main(String[] args) {
+        DUsuario du = new DUsuario();
+        ArrayList<Usuario> L = du.listarTodos();
+        System.out.println(L);
     }
 
 }
