@@ -9,23 +9,16 @@ package Presentacion;
  * @author fidel
  */
 import Datos.Beneficiario;
-import Datos.Respuesta;
 import java.util.List;
 import Negocio.NUsuario;
-//import Negocio.NActividad;
-import Negocio.NDocumento;
-//import Negocio.NPeriodo;
-//import Negocio.NTarea;
 import Datos.Usuario;
 import Negocio.NBeneficiario;
-import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
-import jdk.nashorn.api.tree.BreakTree;
+
 
 public class Guia {
 

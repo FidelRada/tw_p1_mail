@@ -95,24 +95,6 @@ public class DUsuario {
         return resp;
     }
 
-    public ArrayList<Rol> listarRoles() {
-        ArrayList<Rol> lista = new ArrayList<>();
-        String sql = "SELECT * FROM Rol WHERE rol_estado = 1";
-        try {
-            PreparedStatement stmnt = con.conectar().prepareStatement(sql);
-            ResultSet result = stmnt.executeQuery();
-            con.desconectar();
-            while (result.next()) {
-                lista.add(new Rol(result.getInt(1),
-                        result.getString(2),
-                        result.getString(3)));
-            }
-        } catch (Exception e) {
-            System.out.println("Excepcion al listarRoles DUsuario: " + e.getMessage());
-        }
-        return lista;
-    }
-
     public Usuario checkEmail(String email) {
         String sql = "SELECT id, role_id, email, password, ci, fullname FROM Users  WHERE estado = 'ok' AND email = ? ;";
         Usuario u = new Usuario();
