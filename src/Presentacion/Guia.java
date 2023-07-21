@@ -8,6 +8,7 @@ package Presentacion;
  *
  * @author fidel
  */
+import Datos.Beneficiario;
 import Datos.Respuesta;
 import java.util.List;
 import Negocio.NUsuario;
@@ -16,9 +17,11 @@ import Negocio.NDocumento;
 //import Negocio.NPeriodo;
 //import Negocio.NTarea;
 import Datos.Usuario;
+import Negocio.NBeneficiario;
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -37,13 +40,10 @@ public class Guia {
     //private String guiaParams = "";
     public Guia() {
         lineaComand = new HashMap<>();
+        ClearLineComando();
         guiaPopObj = new POPService();
         bandejaLength = guiaPopObj.getBandejaLength();
 
-        lineaComand.put("comando", null);
-        lineaComand.put("receptor", null);
-        lineaComand.put("params", null);//new HashMap<String, Object>());
-        lineaComand.put("error", null);
     }
 
     public void listen() {
@@ -55,8 +55,15 @@ public class Guia {
             List<String> msg = guiaPopObj.getEmail(bandejaLength);
             //List<String> msg = aux;
 
-            String[] returnPath = msg.get(1).split(":");
-            String[] subject = msg.get(40).split(":");
+            String[] returnPath = msg.stream().filter(mensaje -> mensaje.startsWith("Return-Path")).findFirst().orElse(null).split(":");//msg.get(1).split(":");
+            String[] subject = msg.stream().filter(mensaje -> mensaje.startsWith("Subject")).findFirst().orElse(null).split(":");//msg.get(40).split(":");
+
+            int indexSubject = msg.indexOf(subject[0] + ":" + subject[1]) + 1;
+
+            for (int i = indexSubject; !msg.get(i).startsWith("To:"); i++) {
+                subject[1] += msg.get(i);
+            }
+            lineaComand.put("pComando", subject[1]);
             System.out.println(Arrays.toString(returnPath));
             System.out.println(Arrays.toString(subject));
 
@@ -77,7 +84,6 @@ public class Guia {
         lineaComand.put("receptor", null);
         lineaComand.put("params", null);
         lineaComand.put("error", null);
-
     }
 
     public void checkComando(String cmd) {
@@ -92,14 +98,14 @@ public class Guia {
 
         if (s.length > 1) {
             String[] paramsString = s[1].split("\\]");
-            String[] params = paramsString[0].split(", ");
+            String[] params = paramsString[0].split(",");
 
             Map<String, Object> paramsMap = new HashMap<>();
 
             try {
                 if (cmd.startsWith("LIST")) {
 
-                    if (params.length == 1 && params[0].equals("*")) {
+                    if (params.length == 1 && params[0].trim().equals("*")) {
                         lineaComand.put("params", "*");
                         return;
                     }
@@ -107,7 +113,7 @@ public class Guia {
                     LinkedList<String> paramsList = new LinkedList<>();
                     for (String p : params) {
                         if (!p.contains("=")) {
-                            paramsList.add(p);
+                            paramsList.add(p.trim());
                         } else {
                             lineaComand.put("error", "error de sintaxis, solo se permite LISTUSU[ci, name, ...] para mas info use el comando HELP");
                             return;
@@ -168,76 +174,77 @@ public class Guia {
         String cmdo = (String) lineaComand.get("comando");
         switch (cmdo) {
             case Comandos.HELP:
+                System.out.println("Ejecutando comando detectado: HELP");
                 executeHELP();
-                System.out.println("comando detectado: HELP");
                 break;
             case Comandos.LISTUSU:
+                System.out.println("Ejecutando comando detectado: LISTUSU");
                 executeLISTUSU();
-                System.out.println("comando detectado: LISTUSU");
                 break;
             case Comandos.REGUSU:
-                //executeREGING_USUARIOS(this.guiaParams);
-                System.out.println("comando detectado: REGUSU");
+                System.out.println("Ejecutando comando detectado: REGUSU");
+                executeREGUSU();
                 break;
             case Comandos.EDITUSU:
-                //executeEDITING_USUARIOS(this.guiaParams);
-                System.out.println("comando detectado: EDITUSU");
+                System.out.println("Ejecutando comando detectado: EDITUSU");
+                executeEDITUSU();
                 break;
             case Comandos.ELIMUSU:
-                //executeDELITING_USUARIOS(this.guiaParams);
-                System.out.println("comando detectado: ELIMUSU");
+                System.out.println("Ejecutando comando detectado: ELIMUSU");
+                executeELIMUSU();
                 break;
-            case Comandos.LISTING:
-                //executeLISTING_INGRESOS(this.guiaParams);
-                System.out.println("comando detectado: LISTING");
+            /*case Comandos.LISTING:
+                System.out.println("Ejecutando comando detectado: LISTING");
+                executeLISTING();
                 break;
             case Comandos.REGING:
-                //executeREGING_INGRESOS(this.guiaParams);
-                System.out.println("comando detectado: REGING");
+                System.out.println("Ejecutando comando detectado: REGING");
+                executeREGING();
                 break;
             case Comandos.EDITING:
-                //executeEDITING_INGRESOS(this.guiaParams);
-                System.out.println("comando detectado: EDITING");
+                System.out.println("Ejecutando comando detectado: EDITING");
+                executeEDITING();
                 break;
+             */
             case Comandos.LISTBEN:
-                //executeLISTING_BENEFICIARIO(this.guiaParams);
-                System.out.println("comando detectado: LISTBEN");
+                System.out.println("Ejecutando comando detectado: LISTBEN");
+                executeLISTBEN();
                 break;
             case Comandos.REGBEN:
-                //executeREGING_BENEFICIARIO(this.guiaParams);
-                System.out.println("comando detectado: REGBEN");
+                System.out.println("Ejecutando comando detectado: REGBEN");
+                executeREGBEN();
                 break;
             case Comandos.EDITBEN:
-                //executeEDITING_BENEFICIARIO(this.guiaParams);
-                System.out.println("comando detectado: EDITBEN");
+                System.out.println("Ejecutando comando detectado: EDITBEN");
+                executeEDITBEN();
                 break;
             case Comandos.ELIMBEN:
-                //executeDELITING_BENEFICIARIO(this.guiaParams);
-                System.out.println("comando detectado: ELIMBEN");
+                System.out.println("Ejecutando comando detectado: ELIMBEN");
+                executeELIMBEN();
                 break;
             case Comandos.LISTINF:
                 //executeLISTING_INFO(this.guiaParams);
-                System.out.println("comando detectado: LISTINF");
+                System.out.println("Ejecutando comando detectado: LISTINF");
                 break;
             case Comandos.ELIMINF:
                 //executeREGING_INFO(this.guiaParams);
-                System.out.println("comando detectado: ELIMINF");
+                System.out.println("Ejecutando comando detectado: ELIMINF");
                 break;
             case Comandos.LIST_INF_CLINICOS:
                 //executeEDITING_INFO(this.guiaParams);
-                System.out.println("comando detectado: LIST_INF_CLINICOS");
+                System.out.println("Ejecutando comando detectado: LIST_INF_CLINICOS");
                 break;
             case Comandos.ELIM_INF_CLINICOS:
                 //executeDELITING_INFO(this.guiaParams);
-                System.out.println("comando detectado: ELIM_INF_CLINICOS");
+                System.out.println("Ejecutando comando detectado: ELIM_INF_CLINICOS");
                 break;
             case Comandos.LIST_INF_ACADEM:
                 //executeLISTING_INFO_CLINICOS(this.guiaParams);
-                System.out.println("comando detectado: LIST_INF_ACADEM");
+                System.out.println("Ejecutando comando detectado: LIST_INF_ACADEM");
                 break;
             case Comandos.ELIM_INF_ACADEM:
                 //executeREGING_INFO_CLINICOS(this.guiaParams)
-                System.out.println("comando detectado: ELIM_INF_ACADEM");
+                System.out.println("Ejecutando comando detectado: ELIM_INF_ACADEM");
                 break;
             default:
                 System.out.println("Comando no encontrado");
@@ -316,6 +323,302 @@ public class Guia {
                 + "    </style>"
                 + "</head>\n"
                 + "\n";
+    }
+
+    public String helpLISTUSU() {
+        return "    <ul>\n"
+                + "        <li>\n"
+                + "            <p><span class=\"fw-bold text-info\">LISTUSU[*]:</span> Listar usuarios mostrando todos los campos</p>\n"
+                + "\n"
+                + "        </li>\n"
+                + "        <li>\n"
+                + "            <p><span class=\"fw-bold text-info\">LISTUSU[CI, FullName, Email, .....] :</span>\n"
+                + "                Listar usuarios mostrando campos especificos</p>\n"
+                + "            <div class=\"container-sm\">\n"
+                + "\n"
+                + "                <table class=\"table table-hover table-sm\">\n"
+                + "\n"
+                + "                    <thead>\n"
+                + "                        <tr class=\"table-dark\">\n"
+                + "                            <th scope=\"col\">Campo</th>\n"
+                + "                            <th scope=\"col\">Descripcion</th>\n"
+                + "                        </tr>\n"
+                + "                    </thead>\n"
+                + "                    <tbody>\n"
+                + "                        <tr class=\"table-primary\">\n"
+                + "                            <td class=\"fw-bold \" scope=\"row\">id</td>\n"
+                + "                            <td>identificador del usuario</td>\n"
+                + "                        </tr>\n"
+                + "                        <tr class=\"table-secondary\">\n"
+                + "                            <td class=\"fw-bold \" scope=\"row\">fullname</td>\n"
+                + "                            <td>Nombre del usuario</td>\n"
+                + "                        </tr>\n"
+                + "                        <tr class=\"table-primary\">\n"
+                + "                            <td class=\"fw-bold \" scope=\"row\">ci</td>\n"
+                + "                            <td>carnet de identidad del usuario</td>\n"
+                + "                        </tr>\n"
+                + "                        <tr class=\"table-secondary\">\n"
+                + "                            <td class=\"fw-bold \" scope=\"row\">estado</td>\n"
+                + "                            <td>estado del usuario</td>\n"
+                + "                        </tr>\n"
+                + "                        <tr class=\"table-primary\">\n"
+                + "                            <td class=\"fw-bold \" scope=\"row\">email</td>\n"
+                + "                            <td>correo electronico del usuario</td>\n"
+                + "                        </tr>\n"
+                + "                    </tbody>\n"
+                + "                </table>\n"
+                + "            </div>\n"
+                + "        </li>\n"
+                + "    </ul>";
+    }
+
+    public String helpREGUSU() {
+        return "    <ul>\n"
+                + "        <li>\n"
+                + "            <p><span class=\"fw-bold text-info\">REGUSU[email=fidel.rada@ejemplo.com, password=contraceña, ci=9800011,\n"
+                + "                    fullname= fidel rada rojas]</span>: este comando sirve para registrar un usuario nuevo, con sus\n"
+                + "                respectivos campos</p>\n"
+                + "            <div class=\"container-sm \">\n"
+                + "\n"
+                + "                <table class=\"table table-hover table-sm\">\n"
+                + "\n"
+                + "                    <thead>\n"
+                + "                        <tr class=\"table-dark\">\n"
+                + "                            <th scope=\"col\">Campo</th>\n"
+                + "                            <th scope=\"col\">Descripcion</th>\n"
+                + "                        </tr>\n"
+                + "                    </thead>\n"
+                + "                    <tbody>\n"
+                + "                        <tr class=\"table-secondary\">\n"
+                + "                            <td class=\"fw-bold \" class=\"\" scope=\"row\">fullname</td>\n"
+                + "                            <td>Nombre del usuario</td>\n"
+                + "                        </tr>\n"
+                + "                        <tr class=\"table-primary\">\n"
+                + "                            <td class=\"fw-bold \" scope=\"row\">ci</td>\n"
+                + "                            <td>carnet de identidad del usuario</td>\n"
+                + "                        </tr>\n"
+                + "                        <tr class=\"table-secondary\">\n"
+                + "                            <td class=\"fw-bold \" scope=\"row\">password</td>\n"
+                + "                            <td>contraceña del usuario</td>\n"
+                + "                        </tr>\n"
+                + "                        <tr class=\"table-primary\">\n"
+                + "                            <td class=\"fw-bold \" scope=\"row\">email</td>\n"
+                + "                            <td>correo electronico del usuario</td>\n"
+                + "                        </tr>\n"
+                + "                    </tbody>\n"
+                + "                </table>\n"
+                + "            </div>\n"
+                + "        </li>\n"
+                + "    </ul>";
+    }
+
+    public String helpEDITUSU() {
+        return "    <ul>\n"
+                + "        <li>\n"
+                + "            <p><span class=\"fw-bold text-info\">EDITUSU[id=1, email=fidel.rada@ejemplo.com, password=contraceña,\n"
+                + "                    ci=9800011, fullname= fidel rada rojas]</span>: comando para editar informacion de un usuario </p>\n"
+                + "            <div class=\"container-sm \">\n"
+                + "\n"
+                + "                <table class=\"table table-hover table-sm\">\n"
+                + "\n"
+                + "                    <thead>\n"
+                + "                        <tr class=\"table-dark\">\n"
+                + "                            <th scope=\"col\">Campo</th>\n"
+                + "                            <th scope=\"col\">Descripcion</th>\n"
+                + "                        </tr>\n"
+                + "                    </thead>\n"
+                + "                    <tbody>\n"
+                + "                        <tr class=\"table-primary\">\n"
+                + "                            <td class=\"fw-bold \" class=\"\" scope=\"row\">id (OBLIGATORIO)</td>\n"
+                + "                            <td>identificador del usuario, sin este campo no se encontrar el usuario a modificar</td>\n"
+                + "                        </tr>\n"
+                + "                        <tr class=\"table-secondary\">\n"
+                + "                            <td class=\"fw-bold \" class=\"\" scope=\"row\">fullname</td>\n"
+                + "                            <td>Nombre del usuario</td>\n"
+                + "                        </tr>\n"
+                + "                        <tr class=\"table-primary\">\n"
+                + "                            <td class=\"fw-bold \" scope=\"row\">ci</td>\n"
+                + "                            <td>carnet de identidad del usuario</td>\n"
+                + "                        </tr>\n"
+                + "                        <tr class=\"table-secondary\">\n"
+                + "                            <td class=\"fw-bold \" scope=\"row\">password</td>\n"
+                + "                            <td>contraceña del usuario</td>\n"
+                + "                        </tr>\n"
+                + "                        <tr class=\"table-primary\">\n"
+                + "                            <td class=\"fw-bold \" scope=\"row\">email</td>\n"
+                + "                            <td>correo electronico del usuario</td>\n"
+                + "                        </tr>\n"
+                + "                    </tbody>\n"
+                + "                </table>\n"
+                + "            </div>\n"
+                + "        </li>\n"
+                + "    </ul>";
+    }
+
+    public String helpELIMUSU() {
+        return "    <ul>\n"
+                + "        <li>\n"
+                + "            <p><span class=\"fw-bold text-info\">ELIMUSU[ID=1]</span>: Comando para eliminar usuario</p>\n"
+                + "            <div class=\"container-sm\">\n"
+                + "                <table class=\"table table-hover table-sm\">\n"
+                + "                    <thead>\n"
+                + "                        <tr class=\"table-dark\">\n"
+                + "                            <th scope=\"col\">Campo</th>\n"
+                + "                            <th scope=\"col\">Descripcion</th>\n"
+                + "                        </tr>\n"
+                + "                    </thead>\n"
+                + "                    <tbody>\n"
+                + "                        <tr class=\"table-secondary\">\n"
+                + "                            <td class=\"fw-bold \" class=\"\" scope=\"row\">id (OBLIGATORIO)</td>\n"
+                + "                            <td>identificador del usuario, sin este campo no se encontrar el usuario a modificar</td>\n"
+                + "                        </tr>\n"
+                + "                    </tbody>\n"
+                + "                </table>\n"
+                + "            </div>\n"
+                + "        </li>\n"
+                + "    </ul>";
+    }
+
+    public String helpLISTBEN() {
+        return "    <ul>\n"
+                + "        <li>\n"
+                + "            <p><span class=\"text-info fw-bold\">LISTBEN[*]</span>:Comando para listar todos los beneficiarios con todos\n"
+                + "                los campos</p>\n"
+                + "\n"
+                + "        </li>\n"
+                + "        <li>\n"
+                + "            <p><span class=\"text-info fw-bold\">LISTBEN[id, nombre, ... ]</span>:Comando para listar beneficiarios\n"
+                + "                mostrando campos especificos </p>\n"
+                + "            <div class=\"container-sm\">\n"
+                + "\n"
+                + "                <table class=\"table table-hover table-sm\">\n"
+                + "\n"
+                + "                    <thead>\n"
+                + "                        <tr class=\"table-dark\">\n"
+                + "                            <th scope=\"col\">Campo</th>\n"
+                + "                            <th scope=\"col\">Descripcion</th>\n"
+                + "                        </tr>\n"
+                + "                    </thead>\n"
+                + "                    <tbody>\n"
+                + "                        <tr class=\"table-primary\">\n"
+                + "                            <td class=\"fw-bold \" scope=\"row\">id</td>\n"
+                + "                            <td>identificador del Beneficiario</td>\n"
+                + "                        </tr>\n"
+                + "                        <tr class=\"table-secondary\">\n"
+                + "                            <td class=\"fw-bold \" scope=\"row\">nombre</td>\n"
+                + "                            <td>Nombre del Beneficiario</td>\n"
+                + "                        </tr>\n"
+                + "                        <tr class=\"table-primary\">\n"
+                + "                            <td class=\"fw-bold \" scope=\"row\">ci</td>\n"
+                + "                            <td>carnet de identidad del Beneficiario</td>\n"
+                + "                        </tr>\n"
+                + "                        <tr class=\"table-secondary\">\n"
+                + "                            <td class=\"fw-bold \" scope=\"row\">estado</td>\n"
+                + "                            <td>estado del Beneficiario</td>\n"
+                + "                        </tr>\n"
+                + "                    </tbody>\n"
+                + "                </table>\n"
+                + "            </div>\n"
+                + "        </li>\n"
+                + "    </ul>";
+    }
+
+    public String helpREGBEN() {
+        return "    <ul>\n"
+                + "        <li>\n"
+                + "            <p><span class=\"text-info fw-bold\">REGBEN[nombre=fidel, estado=decripcion,\n"
+                + "                    fecha_nacimiento=12/12/23]</span>:Comando para registrar unn beneficiario nuevo</p>\n"
+                + "            <div class=\"container-sm\">\n"
+                + "\n"
+                + "                <table class=\"table table-hover table-sm\">\n"
+                + "\n"
+                + "                    <thead>\n"
+                + "                        <tr class=\"table-dark\">\n"
+                + "                            <th scope=\"col\">Campo</th>\n"
+                + "                            <th scope=\"col\">Descripcion</th>\n"
+                + "                        </tr>\n"
+                + "                    </thead>\n"
+                + "                    <tbody>\n"
+                + "                        <tr class=\"table-secondary\">\n"
+                + "                            <td class=\"fw-bold \" scope=\"row\">nombre</td>\n"
+                + "                            <td>Nombre del Beneficiario</td>\n"
+                + "                        </tr>\n"
+                + "                        <tr class=\"table-primary\">\n"
+                + "                            <td class=\"fw-bold \" scope=\"row\">estado</td>\n"
+                + "                            <td>estado del Beneficiario</td>\n"
+                + "                        </tr>\n"
+                + "                        <tr class=\"table-secondary\">\n"
+                + "                            <td class=\"fw-bold \" scope=\"row\">fecha_nacimiento</td>\n"
+                + "                            <td>fecha de nacimiento del beneficiario</td>\n"
+                + "                        </tr>\n"
+                + "                    </tbody>\n"
+                + "                </table>\n"
+                + "            </div>\n"
+                + "        </li>\n"
+                + "    </ul>";
+    }
+
+    public String helpEDITBEN() {
+        return "    <ul>\n"
+                + "        <li>\n"
+                + "            <p><span class=\"text-info fw-bold\">EDITBEN[id=1, nombre=fidel, estado=decripcion,\n"
+                + "                    fecha_nacimiento=12/12/23]</span>:Comando para </p>\n"
+                + "            <div class=\"container-sm\">\n"
+                + "\n"
+                + "                <table class=\"table table-hover table-sm\">\n"
+                + "\n"
+                + "                    <thead>\n"
+                + "                        <tr class=\"table-dark\">\n"
+                + "                            <th scope=\"col\">Campo</th>\n"
+                + "                            <th scope=\"col\">Descripcion</th>\n"
+                + "                        </tr>\n"
+                + "                    </thead>\n"
+                + "                    <tbody>\n"
+                + "                        <tr class=\"table-primary\">\n"
+                + "                            <td class=\"fw-bold \" scope=\"row\">id (campo obligatorio)</td>\n"
+                + "                            <td>id del beneficiario</td>\n"
+                + "                        </tr>\n"
+                + "                        <tr class=\"table-secondary\">\n"
+                + "                            <td class=\"fw-bold \" scope=\"row\">nombre</td>\n"
+                + "                            <td>Nombre del Beneficiario</td>\n"
+                + "                        </tr>\n"
+                + "                        <tr class=\"table-primary\">\n"
+                + "                            <td class=\"fw-bold \" scope=\"row\">estado</td>\n"
+                + "                            <td>estado del Beneficiario</td>\n"
+                + "                        </tr>\n"
+                + "                        <tr class=\"table-secondary\">\n"
+                + "                            <td class=\"fw-bold \" scope=\"row\">fecha_nacimiento</td>\n"
+                + "                            <td>fecha de nacimiento del beneficiario</td>\n"
+                + "                        </tr>\n"
+                + "                    </tbody>\n"
+                + "                </table>\n"
+                + "            </div>\n"
+                + "        </li>\n"
+                + "    </ul>";
+    }
+
+    public String helpELIMBEN() {
+        return "    <ul>\n"
+                + "        <li>\n"
+                + "            <p><span class=\"text-info fw-bold\">ELIMBEN[id=1]</span>:Comando para </p>\n"
+                + "            <div class=\"container-sm\">\n"
+                + "                <table class=\"table table-hover table-sm\">\n"
+                + "                    <thead>\n"
+                + "                        <tr class=\"table-dark\">\n"
+                + "                            <th scope=\"col\">Campo</th>\n"
+                + "                            <th scope=\"col\">Descripcion</th>\n"
+                + "                        </tr>\n"
+                + "                    </thead>\n"
+                + "                    <tbody>\n"
+                + "                        <tr class=\"table-primary\">\n"
+                + "                            <td class=\"fw-bold \" scope=\"row\">id (campo obligatorio)</td>\n"
+                + "                            <td>id del beneficiario</td>\n"
+                + "                        </tr>\n"
+                + "                    </tbody>\n"
+                + "                </table>\n"
+                + "            </div>\n"
+                + "        </li>\n"
+                + "    </ul>";
     }
 
     public void executeHELP() {
@@ -748,8 +1051,8 @@ public class Guia {
         this.guiaSmtpObj.sendMessage(sbjct, (String) lineaComand.get("receptor"), msg);
         this.guiaSmtpObj.close();
     }
-    
-    private String table(){
+
+    private String table() {
         return "";
     }
 
@@ -758,69 +1061,191 @@ public class Guia {
     //==============================*/
     public void executeLISTUSU() {
         NUsuario nuObj = new NUsuario();
-        ArrayList<Usuario> ListUSU = nuObj.listusu(lineaComand);
+        Map<String, Object> ListUSU = nuObj.listusu(lineaComand);
+        if (ListUSU.get("error") != null) {
+            sendResponseEmail(lineaComand.get("receptor").toString(), head()
+                    + "<h1>ERROR DE SINTAXIS: " + lineaComand.get("pComando") + " </h1>" + helpLISTUSU());
+            return;
+        }
+
+        ArrayList<Usuario> List = (ArrayList<Usuario>) ListUSU.get("list");
+
         String res = head()
                 + "<div class=\"container-sm\">\n"
                 + "\n"
                 + "                <table class=\"table table-hover table-sm\">\n"
                 + "\n"
                 + "                    <thead>\n"
-                + "                        <tr class=\"table-dark\">\n"
-                + "                            <th scope=\"col\">id</th>\n"
-                + "                            <th scope=\"col\">ci</th>\n"
-                + "                            <th scope=\"col\">nombre</th>\n"
-                + "                            <th scope=\"col\">email</th>\n"
-                + "                            <th scope=\"col\">estado</th>\n"
-                + "                        </tr>\n"
-                + "                    </thead>\n"
-                + "                    <tbody>\n";
-        for (Usuario usuario : ListUSU) {
-            res += "                        <tr class=\"table-primary\">\n"
-                    + "                            <td class=\"fw-bold \" scope=\"row\">"+usuario.id+"</td>\n"
-                    + "                            <td>"+usuario.ci+"</td>\n"
-                    + "                            <td>"+usuario.fullname+"</td>\n"
-                    + "                            <td>"+usuario.email+"</td>\n"
-                    + "                            <td>"+usuario.estado+"</td>\n";
+                + "                        <tr class=\"table-dark\">\n";
+        if (lineaComand.get("params").equals("*")) {
+            res += "                            <th scope=\"col\">id</th>\n"
+                    + "                            <th scope=\"col\">ci</th>\n"
+                    + "                            <th scope=\"col\">nombre</th>\n"
+                    + "                            <th scope=\"col\">email</th>\n"
+                    + "                            <th scope=\"col\">estado</th>\n";
+        } else {
+            for (Object object : (LinkedList) lineaComand.get("params")) {
+                res += "                            <th scope=\"col\">" + object.toString() + "</th>\n";
+            }
         }
         res += "                        </tr>\n"
-                    + "                    </tbody>\n"
-                    + "                </table>\n"
-                    + "            </div>\n";
+                + "                    </thead>\n"
+                + "                    <tbody>\n";
+        for (Usuario usuario : List) {
+            res += "                        <tr class=\"table-primary\">\n";
+            if (lineaComand.get("params").equals("*")) {
+
+                res += "                            <td class=\"fw-bold \" scope=\"row\">" + usuario.id + "</td>\n"
+                        + "                            <td>" + usuario.ci + "</td>\n"
+                        + "                            <td>" + usuario.fullname + "</td>\n"
+                        + "                            <td>" + usuario.email + "</td>\n"
+                        + "                            <td>" + usuario.estado + "</td>\n";
+            } else {
+                for (String s : ((LinkedList<String>) lineaComand.get("params"))) {
+                    res += "                            <td class=\"fw-bold \" scope=\"row\">" + usuario.get(s) + "</td>\n";
+                }
+            }
+        }
+        res += "                        </tr>\n"
+                + "                    </tbody>\n"
+                + "                </table>\n"
+                + "            </div>\n";
         sendResponseEmail("RESPUESTA A PETICION LISTUSU", res);
     }
 
-    //public void executeREGUSU(String params) {
-    //    NUsuario nuObj = new NUsuario();
-    //    String msg = nuObj.regusu(params);
-    //    sendResponseEmail("RESPUESTA A PETICION REGUSU", msg);
-    //}
-//
-    //public void executeEDITUSU(String params) {
-    //    NUsuario nuObj = new NUsuario();
-    //    String msg = nuObj.editusu(params);
-    //    sendResponseEmail("RESPUESTA A PETICION EDITUSU", msg);
-    //}
-//
-    //public void executeELIMUSU(String params) {
-    //    NUsuario nuObj = new NUsuario();
-    //    String msg = nuObj.elimusu(params);
-    //    sendResponseEmail("RESPUESTA A PETICION ELIMUSU", msg);
-    //}
-//
-    ///*==============================
-    //===== FIN GESTIONAR USUARIO ====
-    //==============================*/
-//
+    public void executeREGUSU() {
+        NUsuario nuObj = new NUsuario();
+        Map<String, Object> RegUSU = nuObj.regusu(lineaComand);
+        if (RegUSU.get("error") != null) {
+            sendResponseEmail("RESPUESTA A PETICION REGUSU", head()
+                    + "<h1>ERROR DE SINTAXIS: " + lineaComand.get("pComando") + " </h1>" + helpREGUSU());
+            return;
+        }
+        sendResponseEmail(lineaComand.get("receptor").toString(), head() + "<h1> USUARIO CREADO CORECTAMENTE: " + lineaComand.get("pComando") + " </h1>");
+    }
+
+    public void executeEDITUSU() {
+        NUsuario nuObj = new NUsuario();
+        Map<String, Object> RegUSU = nuObj.editusu(lineaComand);
+
+        if (RegUSU.get("error") != null) {
+            sendResponseEmail("RESPUESTA A PETICION EDITUSU", head()
+                    + "<h1>ERROR DE SINTAXIS: " + lineaComand.get("pComando") + " </h1>" + helpEDITUSU());
+            return;
+        }
+
+        sendResponseEmail(lineaComand.get("receptor").toString(), head() + "<h1> USUARIO EDITADO CORECTAMENTE: " + lineaComand.get("pComando") + " </h1>");
+    }
+
+    public void executeELIMUSU() {
+        NUsuario nuObj = new NUsuario();
+        Map<String, Object> RegUSU = nuObj.elimusu(lineaComand);
+
+        if (RegUSU.get("error") != null) {
+            sendResponseEmail("RESPUESTA A PETICION ELIMUSU", head()
+                    + "<h1>ERROR DE SINTAXIS: " + lineaComand.get("pComando") + " </h1>" + helpELIMUSU());
+            return;
+        }
+
+        sendResponseEmail(lineaComand.get("receptor").toString(), head() + "<h1> USUARIO ELIMINADO CORECTAMENTE: " + lineaComand.get("pComando") + " </h1>");
+    }
 
     /*=//====================================
-    //===== CU6 SEGUIMIENTO DE ACTIVIDAD ====
+    //====== CU2 GESTIONAR BENEFICIARIO =====
     //=====================================*/
-    //public void executeSEGACT(String param) {
-    //    NActividad naObj = new NActividad();
-    //    String msg = naObj.segact(param);
-    //    sendResponseEmail("RESPUESTA A SEGACT", msg);
-    //}
-//
+    public void executeLISTBEN() {
+        NBeneficiario nbObj = new NBeneficiario();
+        Map<String, Object> Listben = nbObj.listben(lineaComand);
+        if (Listben.get("error") != null) {
+            sendResponseEmail("RESPUESTA A PETICION LISTBEN", head()
+                    + "<h1>ERROR DE SINTAXIS: " + lineaComand.get("pComando") + " </h1>" + helpLISTBEN());
+            return;
+        }
+
+        ArrayList<Beneficiario> List = (ArrayList<Beneficiario>) Listben.get("resp");
+
+        String res = head()
+                + "<div class=\"container-sm\">\n"
+                + "\n"
+                + "                <table class=\"table table-hover table-sm\">\n"
+                + "\n"
+                + "                    <thead>\n"
+                + "                        <tr class=\"table-dark\">\n";
+        if (lineaComand.get("params").equals("*")) {
+            res += "                            <th scope=\"col\">id</th>\n"
+                    + "                            <th scope=\"col\">nombre</th>\n"
+                    + "                            <th scope=\"col\">situacion</th>\n"
+                    + "                            <th scope=\"col\">fecha nac</th>\n"
+                    + "                            <th scope=\"col\">id_encargado</th>\n";
+        } else {
+            for (Object object : (LinkedList) lineaComand.get("params")) {
+                res += "                            <th scope=\"col\">" + object.toString() + "</th>\n";
+            }
+        }
+        res += "                        </tr>\n"
+                + "                    </thead>\n"
+                + "                    <tbody>\n";
+        
+        for (Beneficiario b : List) {
+            res += "                        <tr class=\"table-primary\">\n";
+            if (lineaComand.get("params").equals("*")) {
+
+                res += "                            <td class=\"fw-bold \" scope=\"row\">" + b.id + "</td>\n"
+                        + "                            <td>" + b.nombre + "</td>\n"
+                        + "                            <td>" + b.situacion + "</td>\n"
+                        + "                            <td>" + b.fecha_nac + "</td>\n"
+                        + "                            <td>" + b.id_usuario + "</td>\n";
+                
+            } else {
+                for (String s : ((LinkedList<String>) lineaComand.get("params"))) {
+                    res += "                            <td class=\"fw-bold \" scope=\"row\">" + b.get(s) + "</td>\n";
+                }
+            }
+        }
+        res += "                        </tr>\n"
+                + "                    </tbody>\n"
+                + "                </table>\n"
+                + "            </div>\n";
+        sendResponseEmail("RESPUESTA A PETICION LISTBEN", res);
+    }
+
+    public void executeREGBEN() {
+        NBeneficiario nbObj = new NBeneficiario();
+        Map<String, Object> RegUSU = nbObj.regben(lineaComand);
+        if (RegUSU.get("error") != null) {
+            sendResponseEmail("RESPUESTA A PETICION REGBEN", head()
+                    + "<h1>ERROR DE SINTAXIS: " + lineaComand.get("pComando") + " </h1>" + helpREGBEN());
+            return;
+        }
+        sendResponseEmail("RESPUESTA A PETICION REGBEN", head() + "<h1> USUARIO CREADO CORECTAMENTE: " + lineaComand.get("pComando") + " </h1>");
+    }
+
+    public void executeEDITBEN() {
+        NBeneficiario nbObj = new NBeneficiario();
+        Map<String, Object> RegBen = nbObj.editben(lineaComand);
+
+        if (RegBen.get("error") != null) {
+            sendResponseEmail("RESPUESTA A PETICION EDITBEN", head()
+                    + "<h1>ERROR DE SINTAXIS: " + lineaComand.get("pComando") + " </h1>" + helpEDITBEN());
+            return;
+        }
+
+        sendResponseEmail("RESPUESTA A PETICION EDITBEN", head() + "<h1> USUARIO EDITADO CORECTAMENTE: " + lineaComand.get("pComando") + " </h1>");
+    }
+
+    public void executeELIMBEN() {
+        NBeneficiario nbObj = new NBeneficiario();
+        Map<String, Object> Regben = nbObj.elimben(lineaComand);
+
+        if (Regben.get("error") != null) {
+            sendResponseEmail("RESPUESTA A PETICION ELIMBEN", head()
+                    + "<h1>ERROR DE SINTAXIS: " + lineaComand.get("pComando") + " </h1>" + helpELIMBEN());
+            return;
+        }
+
+        sendResponseEmail("RESPUESTA A PETICION ELIMBEN", head() + "<h1> USUARIO ELIMINADO CORECTAMENTE: " + lineaComand.get("pComando") + " </h1>");
+    }
+
     ///*=====================================
     //===== FIN SEGUIMIENTO DE ACTIVIDAD ====
     //=====================================*/
@@ -977,64 +1402,64 @@ public class Guia {
     public static void main(String[] args) {
         //String input = "LISTUSU[   id  =   1  , name=\"    Fidel\"]";
         /**
-        Guia g = new Guia();
-        List<String> s = new ArrayList<>();
-        //s.add("Subject:LISTUSU[*]");
-        s.add("   Return-Path: <rada.andres@ficct.uagrm.edu.bo>");
-        s.add("Received: from gateway20.websitewelcome.com (gateway20.websitewelcome.com [192.185.67.41])\n"
-                + "	by www.tecnoweb.org.bo (8.17.1/8.17.1) with ESMTPS id 35UDvJPp784193\n"
-                + "	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT)\n"
-                + "	for <grupo01sa@tecnoweb.org.bo>; Fri, 30 Jun 2023 09:57:20 -0400");
-        s.add("Received: from atl1wswcm02.websitewelcome.com (unknown [50.6.129.163])\n"
-                + "	by atl1wswob01.websitewelcome.com (Postfix) with ESMTP id D6038400DF5CB\n"
-                + "	for <grupo01sa@tecnoweb.org.bo>; Fri, 30 Jun 2023 13:57:18 +0000 (UTC)");
-        s.add("Received: from 162-215-240-81.unifiedlayer.com ([208.91.198.170])\n"
-                + "	by cmsmtp with ESMTP\n"
-                + "	id FEcgqs7T6Je9QFEcgqRQ01; Fri, 30 Jun 2023 13:57:18 +0000");
-        s.add("X-Authority-Reason: nr=8");
-        s.add("DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;\n"
-                + "	d=ficct.uagrm.edu.bo; s=default; h=Content-Transfer-Encoding:Content-Type:\n"
-                + "	Subject:From:To:MIME-Version:Date:Message-ID:Sender:Reply-To:Cc:Content-ID:\n"
-                + "	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc\n"
-                + "	:Resent-Message-ID:In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:\n"
-                + "	List-Subscribe:List-Post:List-Owner:List-Archive;\n"
-                + "	bh=47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=; b=bquRo6qZWfQ6BLCGg7bdwD9B+o\n"
-                + "	f5Hx1r7aokbCFnHprb3IoQImr84yn7nYX/Md+Ucn6ReY1jdqYg1M9Eb+fqmQEyKRsYGKlGy75/Uk6\n"
-                + "	jOvfafJE5/LECqRMHgHo7saWkq5qQHdWD4Qri/MKIBelF8XPeR7vWtaDiX+ble8VQG8FBhcEyZcCX\n"
-                + "	vliPWIkotmAOaYFXrwjdKlpD+GipZ/0U8Yipe6xkTPR+4hVIFXlYVWjLh2L1onSiWJwxHaHFNZGdT\n"
-                + "	/Yl5lKkiSItLFxcFuLxT37gpfhsLfCjzESawJw6c9ILp0UTwORj0mWzs6OTHSM0jRlPf5AIdeHIgx\n"
-                + "	z2SgIBJg==;");
-        s.add("Received: from [177.222.111.245] (port=16702 helo=[192.168.0.12])\n"
-                + "	by cp-20.webhostbox.net with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384\n"
-                + "	(Exim 4.96)\n"
-                + "	(envelope-from <rada.andres@ficct.uagrm.edu.bo>)\n"
-                + "	id 1qFEcf-002LwC-36\n"
-                + "	for grupo01sa@tecnoweb.org.bo;\n"
-                + "	Fri, 30 Jun 2023 19:27:18 +0530");
-        s.add("Message-ID: <7dee7779-9ebe-793e-3f7c-a580e4c53017@ficct.uagrm.edu.bo>");
-        s.add("Date: Fri, 30 Jun 2023 09:57:15 -0400");
-        s.add("MIME-Version: 1.0");
-        s.add("User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101\n"
-                + " Thunderbird/102.12.0");
-        s.add("To: grupo01sa@tecnoweb.org.bo");
-        s.add("Content-Language: en-US");
-        s.add("From: fide rada <rada.andres@ficct.uagrm.edu.bo>");
-        //s.add("Subject: LISTUSU[*]");
-        s.add("Subject: HELP");
-        s.add("Content-Type: text/plain; charset=UTF-8; format=flowed");
-        s.add("Content-Transfer-Encoding: 7bit");
-        s.add("X-AntiAbuse: This header was added to track abuse, please include it with any abuse report");
-
-        //g.checkSubject(s);
-        //g.aux = s;
-        g.listen();
+         * Guia g = new Guia(); List<String> s = new ArrayList<>();
+         * //s.add("Subject:LISTUSU[*]"); s.add(" Return-Path:
+         * <rada.andres@ficct.uagrm.edu.bo>"); s.add("Received: from
+         * gateway20.websitewelcome.com (gateway20.websitewelcome.com
+         * [192.185.67.41])\n" + "	by www.tecnoweb.org.bo (8.17.1/8.17.1) with
+         * ESMTPS id 35UDvJPp784193\n" + "	(version=TLSv1.2
+         * cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT)\n" + "	for
+         * <grupo01sa@tecnoweb.org.bo>; Fri, 30 Jun 2023 09:57:20 -0400");
+         * s.add("Received: from atl1wswcm02.websitewelcome.com (unknown
+         * [50.6.129.163])\n" + "	by atl1wswob01.websitewelcome.com (Postfix)
+         * with ESMTP id D6038400DF5CB\n" + "	for <grupo01sa@tecnoweb.org.bo>;
+         * Fri, 30 Jun 2023 13:57:18 +0000 (UTC)"); s.add("Received: from
+         * 162-215-240-81.unifiedlayer.com ([208.91.198.170])\n" + "	by cmsmtp
+         * with ESMTP\n" + "	id FEcgqs7T6Je9QFEcgqRQ01; Fri, 30 Jun 2023
+         * 13:57:18 +0000"); s.add("X-Authority-Reason: nr=8");
+         * s.add("DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt;
+         * c=relaxed/relaxed;\n" + "	d=ficct.uagrm.edu.bo; s=default;
+         * h=Content-Transfer-Encoding:Content-Type:\n" + "
+         * Subject:From:To:MIME-Version:Date:Message-ID:Sender:Reply-To:Cc:Content-ID:\n"
+         * + "
+         * Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc\n"
+         * + "
+         * :Resent-Message-ID:In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:\n"
+         * + "	List-Subscribe:List-Post:List-Owner:List-Archive;\n" + "
+         * bh=47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=;
+         * b=bquRo6qZWfQ6BLCGg7bdwD9B+o\n" + "
+         * f5Hx1r7aokbCFnHprb3IoQImr84yn7nYX/Md+Ucn6ReY1jdqYg1M9Eb+fqmQEyKRsYGKlGy75/Uk6\n"
+         * + "
+         * jOvfafJE5/LECqRMHgHo7saWkq5qQHdWD4Qri/MKIBelF8XPeR7vWtaDiX+ble8VQG8FBhcEyZcCX\n"
+         * + "
+         * vliPWIkotmAOaYFXrwjdKlpD+GipZ/0U8Yipe6xkTPR+4hVIFXlYVWjLh2L1onSiWJwxHaHFNZGdT\n"
+         * + "
+         * /Yl5lKkiSItLFxcFuLxT37gpfhsLfCjzESawJw6c9ILp0UTwORj0mWzs6OTHSM0jRlPf5AIdeHIgx\n"
+         * + "	z2SgIBJg==;"); s.add("Received: from [177.222.111.245]
+         * (port=16702 helo=[192.168.0.12])\n" + "	by cp-20.webhostbox.net with
+         * esmtpsa (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384\n" + "
+         * (Exim 4.96)\n" + "	(envelope-from
+         * <rada.andres@ficct.uagrm.edu.bo>)\n" + "	id 1qFEcf-002LwC-36\n" + "
+         * for grupo01sa@tecnoweb.org.bo;\n" + "	Fri, 30 Jun 2023 19:27:18
+         * +0530"); s.add("Message-ID:
+         * <7dee7779-9ebe-793e-3f7c-a580e4c53017@ficct.uagrm.edu.bo>");
+         * s.add("Date: Fri, 30 Jun 2023 09:57:15 -0400"); s.add("MIME-Version:
+         * 1.0"); s.add("User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0)
+         * Gecko/20100101\n" + " Thunderbird/102.12.0"); s.add("To:
+         * grupo01sa@tecnoweb.org.bo"); s.add("Content-Language: en-US");
+         * s.add("From: fide rada <rada.andres@ficct.uagrm.edu.bo>");
+         * //s.add("Subject: LISTUSU[*]"); s.add("Subject: HELP");
+         * s.add("Content-Type: text/plain; charset=UTF-8; format=flowed");
+         * s.add("Content-Transfer-Encoding: 7bit"); s.add("X-AntiAbuse: This
+         * header was added to track abuse, please include it with any abuse
+         * report");
+         *
+         * //g.checkSubject(s); //g.aux = s; g.listen();
          */
-        
+
         int yolo = 12323;
         String yolo2 = "";
         System.out.println(yolo2.getClass().getName());
-        
-        
-        
+
     }
 }

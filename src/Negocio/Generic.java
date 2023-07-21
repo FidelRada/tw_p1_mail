@@ -11,7 +11,6 @@ import java.util.regex.Pattern;
  *
  * @author fidel
  */
-
 public class Generic {
 
     static public boolean esEntero(String nro) {
@@ -44,7 +43,11 @@ public class Generic {
 
     //fechas formato: 2022-02-15 año-mes-dia
     static public boolean esFechaValida(String fecha) {
-        Pattern p = Pattern.compile("^([1-9][0-9]{3})-([0-9]{2})-([0-9]{2})$", Pattern.CASE_INSENSITIVE);
+        String patronFecha = "^(0?[1-9]|[12][0-9]|3[01])[-/](0?[1-9]|1[0-2])[-/](19|20)\\d\\d$";
+        Pattern pattern = Pattern.compile(patronFecha);
+        Matcher matcher = pattern.matcher(fecha);
+        return matcher.matches();
+        /*Pattern p = Pattern.compile("^([1-9][0-9]{3})[-/]([0-9]{2})[-/]([0-9]{2})$", Pattern.CASE_INSENSITIVE);
         Matcher m = p.matcher(fecha.trim());
         boolean res = m.find();
         if (res == true) {
@@ -76,7 +79,7 @@ public class Generic {
             }
             return true;
         }
-        return false;
+        return false;*/
     }
 
     static public boolean esYearBisiesto(String yearR) {
